@@ -1,0 +1,6 @@
+import { NextResponse } from "next/server";
+import { and, eq, gt } from "drizzle-orm";
+import { getDb, hasDatabaseUrl } from "../../../../../src/db";
+import { providerCalendarConnections } from "../../../../../src/db/schema";
+export function isActiveCalendarChannel(expiresAt: Date | null, now = new Date()) { return Boolean(expiresAt && expiresAt > now); }
+export async function POST(request: Request) { if (!hasDatabaseUrl()) return new NextResponse(null, { status: 503 }); const channelId = request.headers.get("x-goog-channel-id"); const channelToken = request.headers.get("x-goog-channel-token"); if (!channelId || !channelToken) return new NextResponse(null, { status: 401 }); const [connection] = await getDb().select({ id: providerCalendarConnections.id }).from(providerCalendarConnections).where(and(eq(providerCalendarConnections.channelId, channelId), eq(providerCalendarConnections.channelToken, channelToken), gt(providerCalendarConnections.channelExpiresAt, new Date()))).limit(1); if (!connection) return new NextResponse(null, { status: 401 }); await getDb().update(providerCalendarConnections).set({ syncToken: null, updatedAt: new Date() }).where(eq(providerCalendarConnections.id, connection.id)); return new NextResponse(null, { status: 204 }); }

@@ -1,0 +1,4 @@
+import { NextResponse } from "next/server";
+import { getCurrentActor } from "../../../../../../src/server/auth";
+import { CalendarAuthorizationError, CalendarAvailabilityError, getCalendarStatus } from "../../../../../../src/server/calendar-service";
+export async function GET(_: Request, { params }: { params: Promise<{ providerId: string }> }) { const actor = await getCurrentActor(); if (!actor) return NextResponse.json({ error: "Authentication is required." }, { status: 401 }); try { return NextResponse.json(await getCalendarStatus(actor, (await params).providerId)); } catch (error) { return NextResponse.json({ error: error instanceof CalendarAuthorizationError ? "Forbidden." : error instanceof CalendarAvailabilityError ? error.message : "Calendar status is unavailable." }, { status: error instanceof CalendarAuthorizationError ? 403 : 503 }); } }
