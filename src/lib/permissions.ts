@@ -4,4 +4,5 @@ export function canManageProvider(role: Role, actorId: string, providerOwnerId: 
   return role === "admin" || (role === "provider" && actorId === providerOwnerId);
 }
 export function canViewRequirements(role: Role) { return role === "client" || role === "provider" || role === "admin"; }
+export function canViewAppointments(role: Role) { return role === "client" || role === "provider" || role === "admin"; }
 export function canBookAppointment(role: Role) { return role === "client" || role === "admin"; }
