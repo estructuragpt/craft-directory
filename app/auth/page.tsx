@@ -1,8 +1,10 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { catalog, type Locale } from "../../src/lib/i18n";
 
-export default function AuthPage() {
+export default function AuthPage({ locale = "en" }: { locale?: Locale }) {
+  const copy = catalog(locale);
   const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in");
   const [notice, setNotice] = useState("");
 
@@ -22,5 +24,5 @@ export default function AuthPage() {
     window.location.assign(result.url);
   }
 
-  return <main className="workspace"><p className="eyebrow">ACCOUNT</p><h1>{mode === "sign-in" ? "Sign in" : "Create your account"}</h1><p>Production accounts use Better Auth. The demo role switch is not a sign-in method.</p><form className="provider-form" onSubmit={submit}>{mode === "sign-up" && <input required name="name" placeholder="Name" autoComplete="name"/>}<input required name="email" type="email" placeholder="Email" autoComplete="email"/><input required name="password" type="password" minLength={8} placeholder="Password" autoComplete={mode === "sign-in" ? "current-password" : "new-password"}/><button className="primary">{mode === "sign-in" ? "Sign in" : "Create account"}</button></form><button className="text-button" onClick={signInWithGoogle}>Continue with Google</button>{notice && <p className="notice">{notice}</p>}<button className="text-button" onClick={() => { setMode(mode === "sign-in" ? "sign-up" : "sign-in"); setNotice(""); }}>{mode === "sign-in" ? "Need an account? Sign up" : "Already have an account? Sign in"}</button></main>;
+  return <main className="workspace"><p className="eyebrow">{locale === "es" ? "CUENTA" : "ACCOUNT"}</p><h1>{mode === "sign-in" ? copy.navigation.signIn : locale === "es" ? "Crear tu cuenta" : "Create your account"}</h1><p>{locale === "es" ? "Las cuentas de producción usan Better Auth." : "Production accounts use Better Auth."}</p><form className="provider-form" onSubmit={submit}>{mode === "sign-up" && <input required name="name" placeholder={locale === "es" ? "Nombre" : "Name"} autoComplete="name"/>}<input required name="email" type="email" placeholder="Email" autoComplete="email"/><input required name="password" type="password" minLength={8} placeholder={locale === "es" ? "Contraseña" : "Password"} autoComplete={mode === "sign-in" ? "current-password" : "new-password"}/><button className="primary">{mode === "sign-in" ? copy.navigation.signIn : locale === "es" ? "Crear cuenta" : "Create account"}</button></form><button className="text-button" onClick={signInWithGoogle}>{locale === "es" ? "Continuar con Google" : "Continue with Google"}</button>{notice && <p className="notice">{notice}</p>}<button className="text-button" onClick={() => { setMode(mode === "sign-in" ? "sign-up" : "sign-in"); setNotice(""); }}>{mode === "sign-in" ? locale === "es" ? "¿Necesitas una cuenta? Regístrate" : "Need an account? Sign up" : locale === "es" ? "¿Ya tienes una cuenta? Inicia sesión" : "Already have an account? Sign in"}</button></main>;
 }
