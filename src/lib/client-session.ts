@@ -1,7 +1,7 @@
 import type { Provider, ProviderCreateInput, Role } from "./directory";
 
 export type SessionActor = { id: string; role: Role; name?: string };
-export type SessionPayload = { user: { id: string; role?: string | null; name?: string | null } | null };
+export type SessionPayload = { user: { id: string; role?: string | null; name?: string | null; email?: string | null; phone?: string | null } | null };
 export type ManagementIdentity = SessionActor & { source: "session" | "demo" };
 
 const roles: Role[] = ["visitor", "client", "provider", "admin"];

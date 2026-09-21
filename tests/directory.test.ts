@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deleteProvider, filterProviders, providers, updateProvider, validateProviderPatch } from "../src/lib/directory";
+import { deleteProvider, filterProviders, providers, splitProvidersByOwner, updateProvider, validateProviderPatch } from "../src/lib/directory";
 
 describe("filterProviders", () => {
   it("matches text, category, and location together", () => {
@@ -8,6 +8,12 @@ describe("filterProviders", () => {
 
   it("returns all providers with empty filters", () => {
     expect(filterProviders(providers, {}).length).toBe(providers.length);
+  });
+
+  it("separates owned listings from other providers", () => {
+    const groups = splitProvidersByOwner(providers, "green-horizon");
+    expect(groups.owned.map((provider) => provider.id)).toEqual(["green-horizon"]);
+    expect(groups.other.map((provider) => provider.id)).toEqual(["northline", "civic-build"]);
   });
 });
 

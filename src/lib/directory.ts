@@ -15,6 +15,13 @@ export function filterProviders(items: Provider[], filters: ProviderFilters): Pr
   return items.filter((provider) => includes(`${provider.name} ${provider.description} ${provider.services.join(" ")}`, filters.query) && includes(provider.category, filters.category) && includes(provider.location, filters.location));
 }
 
+export function splitProvidersByOwner(items: Provider[], ownerId: string) {
+  return {
+    owned: items.filter((provider) => provider.ownerId === ownerId),
+    other: items.filter((provider) => provider.ownerId !== ownerId),
+  };
+}
+
 export function createProvider(input: Omit<Provider, "id" | "rating" | "reviews">): Provider {
   return { ...input, id: input.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""), rating: 5, reviews: 0 };
 }
