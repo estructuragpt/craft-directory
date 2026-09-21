@@ -1,0 +1,7 @@
+import { NextResponse } from "next/server";
+import { getCurrentActor } from "../../../src/server/auth";
+import { getProfileRepository, ProfilePersistenceUnavailableError, ProfileValidationError, validateProfilePatch } from "../../../src/server/profile-service";
+
+function errors(error: unknown) { if (error instanceof ProfilePersistenceUnavailableError) return NextResponse.json({ error: error.message }, { status: 503 }); if (error instanceof ProfileValidationError) return NextResponse.json({ error: error.message }, { status: 400 }); return NextResponse.json({ error: "Unable to update profile." }, { status: 500 }); }
+export async function GET() { const actor = await getCurrentActor(); if (!actor) return NextResponse.json({ error: "Authentication is required." }, { status: 401 }); try { const profile = await getProfileRepository().get(actor); return profile ? NextResponse.json({ user: profile }) : NextResponse.json({ error: "User not found." }, { status: 404 }); } catch (error) { return errors(error); } }
+export async function PATCH(request: Request) { const patch = validateProfilePatch(await request.json().catch(() => null)); if (!patch) return NextResponse.json({ error: "A valid name is required." }, { status: 400 }); const actor = await getCurrentActor(); if (!actor) return NextResponse.json({ error: "Authentication is required." }, { status: 401 }); try { return NextResponse.json({ user: await getProfileRepository().update(actor, patch) }); } catch (error) { return errors(error); } }

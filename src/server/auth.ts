@@ -6,7 +6,7 @@ import { account, accountRelations, session, sessionRelations, users, usersRelat
 import type { Role } from "../lib/directory";
 
 export type AuthenticatedActor = { id: string; role: Role };
-type SessionUser = { id: string; role?: string | null };
+type SessionUser = { id: string; role?: string | null; name?: string | null; email?: string | null; phone?: string | null; businessName?: string | null };
 type AuthSession = { user: SessionUser } | null;
 const supportedRoles: Role[] = ["visitor", "client", "provider", "admin"];
 
@@ -40,6 +40,8 @@ function createAuth() {
     user: {
       additionalFields: {
         role: { type: "string", required: false, defaultValue: "client", input: false },
+        phone: { type: "string", required: false, input: true },
+        businessName: { type: "string", required: false, input: true },
       },
     },
     emailAndPassword: { enabled: true },

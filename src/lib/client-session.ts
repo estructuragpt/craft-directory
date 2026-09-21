@@ -1,14 +1,14 @@
 import type { Provider, ProviderCreateInput, Role } from "./directory";
 
-export type SessionActor = { id: string; role: Role; name?: string };
-export type SessionPayload = { user: { id: string; role?: string | null; name?: string | null; email?: string | null; phone?: string | null } | null };
+export type SessionActor = { id: string; role: Role; name?: string; phone?: string; businessName?: string };
+export type SessionPayload = { user: { id: string; role?: string | null; name?: string | null; email?: string | null; phone?: string | null; businessName?: string | null } | null };
 export type ManagementIdentity = SessionActor & { source: "session" | "demo" };
 
 const roles: Role[] = ["visitor", "client", "provider", "admin"];
 function sessionActor(payload: SessionPayload | null): SessionActor | null {
   if (!payload?.user?.id) return null;
   const role = roles.includes(payload.user.role as Role) ? payload.user.role as Role : "client";
-  return { id: payload.user.id, role, name: payload.user.name ?? undefined };
+  return { id: payload.user.id, role, name: payload.user.name ?? undefined, phone: payload.user.phone ?? undefined, businessName: payload.user.businessName ?? undefined };
 }
 
 export function managementIdentity(payload: SessionPayload | null, demo: SessionActor): ManagementIdentity {
@@ -20,6 +20,14 @@ export async function fetchSession(fetcher: typeof fetch = fetch): Promise<Sessi
   const response = await fetcher("/api/auth/get-session", { credentials: "include" });
   if (!response.ok) return null;
   return response.json() as Promise<SessionPayload>;
+}
+export async function fetchProfile(fetcher: typeof fetch = fetch): Promise<SessionPayload | null> {
+  const response = await fetcher("/api/profile", { credentials: "include" });
+  return response.ok ? response.json() as Promise<SessionPayload> : null;
+}
+export type ProfilePatch = { name: string; phone?: string; businessName?: string };
+export async function mutateProfile(fetcher: typeof fetch, patch: ProfilePatch) {
+  return fetcher("/api/profile", { method: "PATCH", credentials: "include", headers: { "content-type": "application/json" }, body: JSON.stringify(patch) });
 }
 
 export async function fetchProviders(fetcher: typeof fetch = fetch): Promise<Provider[] | null> {

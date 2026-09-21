@@ -3,6 +3,8 @@ import { googleSocialProviderConfig, mapSessionToActor, resolveSessionActor } fr
 import { accountRelations, sessionRelations, usersRelations } from "../src/db/schema";
 import { PATCH } from "../app/api/providers/[providerId]/route";
 import { assertCanManageProvider, ProviderAuthorizationError } from "../src/server/provider-service";
+import { PATCH as PATCH_PROFILE } from "../app/api/profile/route";
+import { validateProfilePatch } from "../src/server/profile-service";
 
 describe("session role mapping", () => {
   it("maps a Better Auth session user to a supported application role", () => {
@@ -39,5 +41,17 @@ describe("protected provider mutations", () => {
   it("rejects a provider mutating another owner's listing", () => {
     expect(() => assertCanManageProvider({ id: "provider-1", role: "provider" }, "provider-2")).toThrow(ProviderAuthorizationError);
     expect(() => assertCanManageProvider({ id: "admin-1", role: "admin" }, "provider-2")).not.toThrow();
+  });
+});
+
+describe("profile editing", () => {
+  it("validates profile fields without permitting role or email changes", () => {
+    expect(validateProfilePatch({ name: " Alex ", phone: "555", businessName: "Studio" })).toEqual({ name: "Alex", phone: "555", businessName: "Studio" });
+    expect(validateProfilePatch({ name: "" })).toBeNull();
+    expect(validateProfilePatch({ name: "Alex", role: "admin", email: "x@example.com" })).toEqual({ name: "Alex", phone: undefined, businessName: undefined });
+  });
+  it("rejects malformed profile PATCH before auth lookup", async () => {
+    const response = await PATCH_PROFILE(new Request("http://localhost/api/profile", { method: "PATCH", body: JSON.stringify({ role: "admin" }) }));
+    expect(response.status).toBe(400);
   });
 });

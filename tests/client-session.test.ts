@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fetchProviders, getMutationNotice, linkGoogleAccount, managementIdentity, mutateProvider, safeAuthCallbackURL, type SessionPayload } from "../src/lib/client-session";
+import { fetchProviders, fetchProfile, getMutationNotice, linkGoogleAccount, managementIdentity, mutateProfile, mutateProvider, safeAuthCallbackURL, type SessionPayload } from "../src/lib/client-session";
 import { assertCanCreateProvider, ProviderAuthorizationError, toDirectoryProvider } from "../src/server/provider-service";
 
 describe("session-aware provider management", () => {
@@ -8,8 +8,23 @@ describe("session-aware provider management", () => {
     expect(managementIdentity(session, { id: "green-horizon", role: "provider" })).toEqual({ id: "provider-1", role: "provider", name: "Provider", source: "session" });
   });
 
+  it("projects editable profile fields and business name into identity", () => {
+    const session: SessionPayload = { user: { id: "provider-1", role: "provider", name: "Alex", phone: "555", businessName: "Studio Alex" } };
+    expect(managementIdentity(session, { id: "demo", role: "provider" })).toMatchObject({ id: "provider-1", name: "Alex", phone: "555", businessName: "Studio Alex", source: "session" });
+  });
+
   it("uses the clearly separate demo identity only without a session", () => {
     expect(managementIdentity(null, { id: "green-horizon", role: "provider" })).toEqual({ id: "green-horizon", role: "provider", source: "demo" });
+  });
+});
+
+describe("profile persistence helpers", () => {
+  it("loads and patches the authenticated profile", async () => {
+    let request: RequestInit | undefined;
+    const fetcher = (async (_input: RequestInfo | URL, init?: RequestInit) => { request = init; return new Response(JSON.stringify({ user: { id: "u1", name: "Alex", role: "client", phone: "555", businessName: "Alex Co", email: "a@example.com" } }), { status: 200 }); }) as typeof fetch;
+    expect((await fetchProfile(fetcher))?.user?.businessName).toBe("Alex Co");
+    await mutateProfile(fetcher, { name: "Alex", phone: "555", businessName: "Alex Co" });
+    expect(request?.method).toBe("PATCH");
   });
 });
 
